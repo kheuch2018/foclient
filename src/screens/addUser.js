@@ -9,14 +9,16 @@ import { Button } from '../components';
 class AddUser extends Component {
 
     state = {
-        userData: []
+        userData: [],
+        numberOfUsers: 0,
+        addedUsers: []
     }
 
     componentDidMount() {
         firebaseSDK.database()
         .ref('users/')
         .on("value",user => {
-            console.warn(user.val())
+            // console.warn(user.val())
             let users=[]
             user.forEach((child) => {
                 users.push(child.val());
@@ -30,19 +32,43 @@ class AddUser extends Component {
     }
 
     selectUser = (user) => {
-        console.warn('Select user ', user)
+        const {numberOfUsers,addedUsers} =this.state
+        if(!addedUsers.includes(user)){
+            let newUsers = [...addedUsers]
+            newUsers.push(user);
+            this.setState({numberOfUsers: numberOfUsers+1,addedUsers: newUsers})
+
+        }else{
+            let newUsers = [...addedUsers]
+            newUsers = newUsers.filter(item => item !== user)
+            this.setState({numberOfUsers: numberOfUsers-1,addedUsers: newUsers})
+        }
+        console.log(addedUsers)
     }
 
     renderItem = (item) => {
-        console.warn({ item })
+        // console.warn({ item })
         return <View style={styles.userRow}>
             <View style={styles.imageTextView}>
-                <Image source={profile} style={styles.userImage} />
-                <Text> {item.displayName} </Text>
+                <View style={{flexDirection: "row"}}>
+                    <View>
+                        <Image source={profile} style={styles.userImage} />
+                    </View>
+                    <View>
+                        {this.state.addedUsers.includes(item) ? 
+                            <View style={{backgroundColor: "black", width: 10, height: 10, borderRadius: 10}} />
+                            : <View/>
+                        }
+                        <Text> {item.displayName} </Text>
+                    </View>
+                </View>
             </View>
             <TouchableOpacity onPress={() => this.selectUser(item)}
                 style={styles.addUserBtn}>
-                <Text> Add </Text>
+                
+
+                
+                <Text> {this.state.addedUsers.includes(item) ? "Added": "Add"}</Text>
             </TouchableOpacity>
         </View>
     }
@@ -68,11 +94,28 @@ class AddUser extends Component {
                             keyExtractor={(index, item) => index.toString()}
                         />
                     </View>
-                    <Button 
-                        name={'Call'}
-                        width={WP('30')}
-                        btnStyle={{ marginTop: 10 }}
-                    />
+
+                    <View style={{flex:1,flexDirection: "row",marginTop: 100,marginLeft: 15}}>
+                        <View style={{flex:1,marginTop: 20}}>
+                            <Image source={profile} style={styles.userImage} />
+                        </View>
+                        <View style={{flex:5,marginTop: 20}}>
+                        <Text>{this.state.numberOfUsers >0 ? "+"+this.state.numberOfUsers : ""}</Text>
+                        </View>
+
+                        <View style={{flex:4}}>
+                            <Button 
+                                name={'Call'}
+                                width={WP('30')}
+                                btnStyle={{ marginTop: 10 }}
+                                onPress={() => this.props.navigation.navigate("Call",{
+                                    AppID: "1234567",
+                                    channelName: "test1"
+                                })}
+                                />
+                        </View>
+
+                    </View>
                 </View>
             // </ScrollView>
         )
